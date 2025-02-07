@@ -22,6 +22,7 @@ RUN cd luarocks-3.11.1 && ./configure && make && make install
 RUN luarocks install lua-resty-http && luarocks install lua-resty-string
 # cleanup
 RUN rm luarocks-3.11.1.tar.gz && rm -rf luarocks-3.11.1 
+RUN apt remove wget gnupg zip build-essential && apt autoremove -y && apt clean -y && rm -rf /var/lib/apt/lists/*
 
 FROM base as runner
 COPY ./nginx/nginx.conf /tmp/nginx.conf
@@ -32,6 +33,7 @@ COPY ./scripts/start.sh /app/start.sh
 
 RUN chmod +x /app/start.sh
 RUN chmod 0644 /tmp/init-cron
+RUN touch /var/log/cron.log
 
 RUN mkdir -p /opt/data/static
 RUN chmod 777 -R /opt/data/static

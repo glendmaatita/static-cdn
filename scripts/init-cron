@@ -1,1 +1,3 @@
-* * * * * /usr/bin/find /opt/data/static -type f -mmin +${EXPIRE_TIME} -exec /usr/bin/rm -f {} \;
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+* * * * * /usr/bin/find /opt/data/static -type f -mmin +${EXPIRE_TIME} -exec /usr/bin/rm -f {} \; >> /var/log/cron.log 2>&1
