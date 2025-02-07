@@ -18,6 +18,8 @@ Serve static files through cdn, fro example `http://localhost:8080/serve/https:/
 ~$ docker run -p 8080:8080 -v .:/opt/data/static ghcr.io/glendmaatita/static-cdn 
 ```
 
+Make sure the directory is writable
+
 ### Set Expire (in minutes)
 
 ```
