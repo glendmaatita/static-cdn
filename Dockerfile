@@ -4,7 +4,7 @@ WORKDIR /app
 
 ENV DNS_RESOLVER="8.8.8.8 8.8.8.4"
 ENV ENABLE_IPV6="off"
-ENV EXPIRE_TIME="2"
+ENV EXPIRE_TIME="360"
 
 RUN apt update -y && apt install -y nginx nginx-extras lua5.1 liblua5.1-dev wget gnupg ca-certificates zip build-essential gettext cron
 RUN wget -O - https://openresty.org/package/pubkey.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/openresty.gpg
@@ -22,7 +22,7 @@ RUN cd luarocks-3.11.1 && ./configure && make && make install
 RUN luarocks install lua-resty-http && luarocks install lua-resty-string
 # cleanup
 RUN rm luarocks-3.11.1.tar.gz && rm -rf luarocks-3.11.1 
-RUN apt remove wget gnupg zip build-essential && apt autoremove -y && apt clean -y && rm -rf /var/lib/apt/lists/*
+RUN apt remove -y wget gnupg zip build-essential && apt autoremove -y && apt clean -y && rm -rf /var/lib/apt/lists/*
 
 FROM base as runner
 COPY ./nginx/nginx.conf /tmp/nginx.conf
