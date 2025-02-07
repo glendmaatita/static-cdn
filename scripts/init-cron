@@ -1,0 +1,1 @@
+* * * * * /usr/bin/find /opt/data/static -type f -mmin +${EXPIRE_TIME} -exec /usr/bin/rm -f {} \;

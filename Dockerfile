@@ -4,8 +4,9 @@ WORKDIR /app
 
 ENV DNS_RESOLVER="8.8.8.8 8.8.8.4"
 ENV ENABLE_IPV6="off"
+ENV EXPIRE_TIME="2"
 
-RUN apt update -y && apt install -y nginx nginx-extras lua5.1 liblua5.1-dev wget gnupg ca-certificates zip build-essential gettext
+RUN apt update -y && apt install -y nginx nginx-extras lua5.1 liblua5.1-dev wget gnupg ca-certificates zip build-essential gettext cron
 RUN wget -O - https://openresty.org/package/pubkey.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/openresty.gpg
 RUN codename=`grep -Po 'VERSION="[0-9]+ \(\K[^)]+' /etc/os-release` && \
     echo "deb http://openresty.org/package/debian $codename openresty" \
@@ -25,10 +26,12 @@ RUN rm luarocks-3.11.1.tar.gz && rm -rf luarocks-3.11.1
 FROM base as runner
 COPY ./nginx/nginx.conf /tmp/nginx.conf
 COPY ./nginx/default.conf /tmp/default.conf
+COPY ./scripts/init-cron /tmp/init-cron
 COPY ./scripts/cdn.lua /etc/nginx/conf.d/lua/cdn.lua
 COPY ./scripts/start.sh /app/start.sh
 
 RUN chmod +x /app/start.sh
+RUN chmod 0644 /tmp/init-cron
 
 RUN mkdir -p /opt/data/static
 RUN chmod 777 -R /opt/data/static
