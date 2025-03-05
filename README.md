@@ -28,13 +28,13 @@ docker run -p 8080:8080 -v .:/opt/data/static -e EXPIRE_TIME="5" ghcr.io/glendma
 
 ## Upload
 
-static-cdn also support upload to S3-compatible API such as AWS S3, MinIO, or Digital Ocean. Pass Key and Secret when run docker
+Static-CDN also supports uploading to S3-compatible APIs such as AWS S3, MinIO, or DigitalOcean. Pass the Key and Secret when running the Docker container.
 
 ```
 docker run -p 8080:8080 -e AWS_ACCESS_KEY_ID=key-id -e AWS_SECRET_ACCESS_KEY=access-key static-cdn
 ```
 
-Example of Python code to upload files to S3
+Here's an example of a Python script to upload files to an S3 bucket using the `boto3` library:
 
 ```
 import boto3
