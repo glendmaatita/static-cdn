@@ -20,22 +20,26 @@ local function get_target_url()
     local decoded_uri = ngx.unescape_uri(request_uri)
     ngx.log(ngx.ERR, "Decoded URI: " .. decoded_uri)
 
-    -- Updated regex pattern to correctly extract endpoint, bucket, and filename
-    local pattern = [[^/upload/(https?:/)?([^/]+)/([^/]+)/(.+)$]]
+    -- Fix duplicate "/upload/https://" occurrences
+    local normalized_uri = decoded_uri:gsub("^/upload/(https?://[^/]+/upload/)", "/upload/")
+    ngx.log(ngx.ERR, "Normalized URI: " .. normalized_uri)
+
+    -- Regex pattern to correctly extract endpoint, bucket, and filename
+    local pattern = [[^/upload/(https?://([^/]+)/([^/]+)/(.*))$]]
 
     -- Match URI
-    local matches, err = ngx.re.match(decoded_uri, pattern, "jo")
+    local matches, err = ngx.re.match(normalized_uri, pattern, "jo")
 
     if not matches then
         ngx.status = ngx.HTTP_BAD_REQUEST
-        ngx.log(ngx.ERR, "Invalid request URI format: " .. decoded_uri)
+        ngx.log(ngx.ERR, "Invalid request URI format: " .. normalized_uri)
         ngx.exit(ngx.HTTP_BAD_REQUEST)
     end
 
     -- Extract values
-    local endpoint = matches[2]  -- Second capture group (skipping "https:/")
-    local bucket = matches[3]    -- Third capture group
-    local filename = matches[4]  -- Fourth capture group
+    local endpoint = matches[2]  -- Second capture group (endpoint)
+    local bucket = matches[3]    -- Third capture group (bucket)
+    local filename = matches[4]  -- Fourth capture group (filename)
 
     -- Extract region from endpoint
     local region = endpoint:match("^([^.]+)")
@@ -45,25 +49,31 @@ local function get_target_url()
         ngx.exit(ngx.HTTP_BAD_REQUEST)
     end
 
-    ngx.log(ngx.ERR, "Extracted values -> Endpoint: ", endpoint, ", Bucket: ", bucket, ", Filename: ", filename, ", Region: ", region)
+    ngx.log(ngx.ERR, "Extracted values -> Endpoint: " .. endpoint .. ", Bucket: " .. bucket .. ", Filename: " .. filename .. ", Region: " .. region)
 
     return endpoint, bucket, filename, region
 end
 
 
-
 -- Save file locally
 local function save_file_to_disk(filename, data)
-    local file_path = storage_dir .. filename
-    local file = io.open(file_path, "wb")
+    local full_path = storage_dir .. filename
+    local dir_path = full_path:match("(.*/)")  -- Extract directory path
+
+    -- Create directories if they don't exist
+    if dir_path then
+        os.execute("mkdir -p " .. dir_path)
+    end
+
+    local file = io.open(full_path, "wb")
     if not file then
         ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-        ngx.log(ngx.ERR, "Failed to save file locally")
+        ngx.log(ngx.ERR, "Failed to save file locally: " .. full_path)
         ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
     end
     file:write(data)
     file:close()
-    return file_path
+    return full_path
 end
 
 -- Upload the file to S3
