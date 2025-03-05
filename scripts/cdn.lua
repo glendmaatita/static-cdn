@@ -3,7 +3,8 @@ local sha256 = require("resty.sha256")
 local str = require("resty.string")
 
 local function get_file_extension(url)
-    return url:match("%.([a-zA-Z0-9]+)$") or "bin"
+    local clean_url = url:match("([^?]+)")
+    return clean_url:match("%.([a-zA-Z0-9]+)$") or "bin"
 end
 
 local function hash_url(url)
@@ -50,8 +51,10 @@ end
 
 -- Download file if not exists
 remote_url = ngx.unescape_uri(remote_url)
+
 local hash = hash_url(remote_url)
 local ext = get_file_extension(remote_url)
+
 local filename = hash .. "." .. ext
 local file_path = "/opt/data/static/" .. filename
 
@@ -61,6 +64,13 @@ if not file_exists(file_path) then
         ngx.say("Failed to fetch file")
         return
     end
+end
+
+if ext == "pdf" then
+    ngx.header["Content-Type"] = "application/pdf"
+    ngx.header["Content-Disposition"] = "inline"
+else
+    ngx.header["Content-Type"] = "application/octet-stream"
 end
 
 -- Serve static files

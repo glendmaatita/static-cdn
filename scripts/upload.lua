@@ -76,6 +76,7 @@ local function save_file_to_disk(filename, data)
     return full_path
 end
 
+
 -- Upload the file to S3
 local function upload_to_s3(file_path, endpoint, bucket, filename, region)
     -- Get the current time in UTC format
