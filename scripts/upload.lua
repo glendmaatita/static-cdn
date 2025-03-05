@@ -15,35 +15,42 @@ local storage_dir = "/tmp/s3_uploads/"
 local function get_target_url()
     local request_uri = ngx.var.request_uri
     ngx.log(ngx.ERR, "Request URI: " .. request_uri)
-    -- Regex pattern to extract components
-    local pattern = [[^/upload/(?<endpoint>[^/]+)/(?<bucket>[^/]+)/(?<filename>.+)$]]
+
+    -- Decode percent-encoded characters (e.g., "https%3A" -> "https:")
+    local decoded_uri = ngx.unescape_uri(request_uri)
+    ngx.log(ngx.ERR, "Decoded URI: " .. decoded_uri)
+
+    -- Updated regex pattern to correctly extract endpoint, bucket, and filename
+    local pattern = [[^/upload/(https?:/)?([^/]+)/([^/]+)/(.+)$]]
 
     -- Match URI
-    local matches, err = ngx.re.match(request_uri, pattern, "jo")
+    local matches, err = ngx.re.match(decoded_uri, pattern, "jo")
 
     if not matches then
         ngx.status = ngx.HTTP_BAD_REQUEST
-        ngx.log(ngx.ERR, "Invalid request URI format: " .. request_uri)
+        ngx.log(ngx.ERR, "Invalid request URI format: " .. decoded_uri)
         ngx.exit(ngx.HTTP_BAD_REQUEST)
     end
 
     -- Extract values
-    local endpoint = matches["endpoint"]
-    local bucket = matches["bucket"]
-    local filename = matches["filename"]
+    local endpoint = matches[2]  -- Second capture group (skipping "https:/")
+    local bucket = matches[3]    -- Third capture group
+    local filename = matches[4]  -- Fourth capture group
 
     -- Extract region from endpoint
-    local region = endpoint:match("s3%.([^%.]+)")
+    local region = endpoint:match("^([^.]+)")
     if not region then
         ngx.status = ngx.HTTP_BAD_REQUEST
         ngx.log(ngx.ERR, "Invalid endpoint format: " .. endpoint)
         ngx.exit(ngx.HTTP_BAD_REQUEST)
     end
 
-    ngx.log(ngx.ERR, endpoint, " ", bucket, " ", filename, " ", region)
+    ngx.log(ngx.ERR, "Extracted values -> Endpoint: ", endpoint, ", Bucket: ", bucket, ", Filename: ", filename, ", Region: ", region)
 
     return endpoint, bucket, filename, region
 end
+
+
 
 -- Save file locally
 local function save_file_to_disk(filename, data)
