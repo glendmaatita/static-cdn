@@ -18,7 +18,11 @@ RUN apt update -y && apt install -y openresty
 RUN wget https://luarocks.org/releases/luarocks-3.11.1.tar.gz && \
     tar zxpf luarocks-3.11.1.tar.gz && \
     cd luarocks-3.11.1 && ./configure && make && make install && \
-    luarocks install lua-resty-http && luarocks install lua-resty-string
+    luarocks install lua-resty-http && \
+    luarocks install lua-resty-string && \
+    luarocks install lua-cjson && \
+    luarocks install lua-resty-core && \
+    luarocks install lua-resty-aws-signature
 
     # cleanup
 RUN rm luarocks-3.11.1.tar.gz && rm -rf luarocks-3.11.1 && \
@@ -29,12 +33,15 @@ COPY ./nginx/nginx.conf /tmp/nginx.conf
 COPY ./nginx/default.conf /tmp/default.conf
 COPY ./scripts/init-cron /tmp/init-cron
 COPY ./scripts/cdn.lua /etc/nginx/conf.d/lua/cdn.lua
+COPY ./scripts/upload.lua /etc/nginx/conf.d/lua/upload.lua
 COPY ./scripts/start.sh /app/start.sh
 
 RUN chmod +x /app/start.sh && \
     chmod 0644 /tmp/init-cron && \
     touch /var/log/cron.log && \
     mkdir -p /opt/data/static && \
-    chmod 777 -R /opt/data/static
+    chmod 777 -R /opt/data/static && \
+    mkdir -p /tmp/s3_uploads && \
+    chmod 777 -R /tmp/s3_uploads
 
 ENTRYPOINT [ "/app/start.sh" ]
