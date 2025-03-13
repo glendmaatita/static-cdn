@@ -15,6 +15,7 @@ local storage_dir = "/tmp/s3_uploads/"
 local function get_target_url()
     local request_uri = ngx.var.request_uri
     ngx.log(ngx.ERR, "Request URI: " .. request_uri)
+    request_uri = string.gsub(request_uri, " ", "%%20")
 
     -- Decode percent-encoded characters (e.g., "https%3A" -> "https:")
     local decoded_uri = ngx.unescape_uri(request_uri)

@@ -21,6 +21,8 @@ end
 
 local function download_file(url, save_path)
     ngx.log(ngx.ERR, "Downloaded: ", url, " ", save_path)
+    url = string.gsub(url, " ", "%%20")
+
     local httpc = http.new()
     local res, err = httpc:request_uri(url, { method = "GET", ssl_verify = false })
 
